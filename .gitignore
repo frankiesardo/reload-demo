@@ -1,0 +1,11 @@
+/target
+/out
+profiles.clj
+/.lein-*
+/.nrepl-port
+/.repl
+*.log
+/.env
+.idea/
+*.iml
+.DS_Store
