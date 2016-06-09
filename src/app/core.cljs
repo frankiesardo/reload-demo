@@ -1,6 +1,15 @@
 (ns app.core
-  (:require [reagent.core :as r]
-            [app.mdl :as mdl]))
+  (:require cljsjs.material
+            [reagent.core :as r]))
+
+(def upgrade-dom (.. js/componentHandler -upgradeDom))
+
+(defn mdl [& children]
+  (r/create-class
+    {:display-name         "mdl-wrapper"
+     :component-did-mount  (fn [] (upgrade-dom))
+     :component-did-update (fn [] (upgrade-dom))
+     :reagent-render       (fn [& children] (into [:div] children))}))
 
 (def init-state
   {:user    {:email "hello@example.com"}
@@ -87,12 +96,12 @@
 (defn chart [constructor cursor opts]
   (r/create-class
     {:display-name         "Chartist"
-     :component-did-mount  (fn [this] (constructor. (r/dom-node this) (clj->js @cursor) (clj->js opts)))
-     :component-did-update (fn [this]
-                             (enable-console-print!)
-                             (println 'XXX 'updated!)
+     :component-did-mount  (fn [this]
                              (constructor. (r/dom-node this) (clj->js @cursor) (clj->js opts)))
-     :reagent-render       (fn [] [:div])}))
+     :component-did-update (fn [this]
+                             (constructor. (r/dom-node this) (clj->js @cursor) (clj->js opts)))
+     :reagent-render       (fn []
+                             @cursor [:div])}))
 
 (defn pie-charts []
   [:div.demo-charts.mdl-color--white.mdl-shadow--2dp.mdl-cell.mdl-cell--12-col.mdl-grid
@@ -143,13 +152,15 @@
 (defn content []
   [:main.mdl-layout__content.mdl-color--grey-100
    [:div.mdl-grid.demo-content
+
     [pie-charts]
     [line-charts]
-    [cards]]])
+    [cards]
 
+    ]])
 
 (defn main []
-  [:div
+  [mdl
    [:div.demo-layout.mdl-layout.mdl-js-layout.mdl-layout--fixed-drawer.mdl-layout--fixed-header
     [header]
     [drawer]

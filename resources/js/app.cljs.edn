@@ -1,4 +1,3 @@
-{:require  [app.core]
- :init-fns [app.core/init]
- :compiler-options {:asset-path "js/app.out"
-                    :parallel-build true}}
+{:require          [app.core]
+ :init-fns         [app.core/init]
+ :compiler-options {:asset-path "js/app.out"}}
