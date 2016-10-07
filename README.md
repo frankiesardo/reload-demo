@@ -64,3 +64,7 @@ Then in your repl you can execute:
                (fn fail [msg] (println "Failure:" msg))
                #js {:quality 50}))
 ```
+
+### Work with React Native
+
+Check out this boot task: [boot-react-native](https://github.com/mjmeintjes/boot-react-native)
