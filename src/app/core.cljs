@@ -2,14 +2,11 @@
   (:require cljsjs.material
             [reagent.core :as r]))
 
-(def upgrade-dom (.. js/componentHandler -upgradeDom))
+(enable-console-print!)
 
-(defn mdl [& children]
-  (r/create-class
-    {:display-name         "mdl-wrapper"
-     :component-did-mount  (fn [] (upgrade-dom))
-     :component-did-update (fn [] (upgrade-dom))
-     :reagent-render       (fn [& children] (into [:div] children))}))
+(println "Hello from Cljs")
+
+(def upgrade-dom (.. js/componentHandler -upgradeDom))
 
 (def init-state
   {:user    {:email "hello@example.com"}
@@ -27,11 +24,11 @@
              "Views per object"
              "Objects selected"
              "Objects viewed"]
-   :charts  {:line [{:labels ["a" "b" "c"]
+   :charts  {:line [{:labels ["" "a" "b" "c"]
                      :series [[1 2 3 4 5]
                               [45 7 33 2 45]
                               [6 78 4 2 11]]}
-                    {:labels ["a" "b" "c"]
+                    {:labels ["" "a" "b" "c"]
                      :series [[1 2 3 4 5]
                               [45 7 33 2 45]
                               [6 78 4 2 11]]}]
@@ -44,7 +41,7 @@
                     {:labels [" " " " "40%"]
                      :series [4 6 0]}]}})
 
-(def app-state (r/atom init-state))
+(defonce app-state (r/atom init-state))
 
 (defn header []
   [:header.demo-header.mdl-layout__header.mdl-color--grey-100.mdl-color-text--grey-600
@@ -91,7 +88,7 @@
              [:a.mdl-navigation__link
               {:href ""}
               [:i.mdl-color-text--blue-grey-400.material-icons
-               {:role "presentation"} icon] text]))]])
+               {:role "presentation"} icon] [:span.mdl-color-text--blue-grey-100 text]]))]])
 
 (defn chart [constructor cursor opts]
   (r/create-class
@@ -118,20 +115,18 @@
             ^{:key (str "line-chart-" i)}
             [chart (.-Line js/Chartist) (r/cursor app-state [:charts :line i]) {:height 275}]))])
 
+
+(defn change-location []
+  (println "Changed location")
+  #_(js/alert "Changed location"))
+
+(def padding "auto" #_30)
+
 (defn cards []
   [:div.demo-cards.mdl-cell.mdl-cell--4-col.mdl-cell--8-col-tablet.mdl-grid.mdl-grid--no-spacing
-   [:div.demo-updates.mdl-card.mdl-shadow--2dp.mdl-cell.mdl-cell--4-col.mdl-cell--4-col-tablet.mdl-cell--12-col-desktop
-    [:div.mdl-card__title.mdl-card--expand.mdl-color--teal-300
-     [:h2.mdl-card__title-text "Updates"]]
-    [:div.mdl-card__supporting-text.mdl-color-text--grey-600
-     "\n                Non dolore elit adipisicing ea reprehenderit consectetur culpa.\n              "]
-    [:div.mdl-card__actions.mdl-card--border
-     [:a.mdl-button.mdl-js-button.mdl-js-ripple-effect
-      {:href "#"}
-      "Read More"]]]
-   [:div.demo-separator.mdl-cell--1-col]
    [:div.demo-options.mdl-card.mdl-color--deep-purple-500.mdl-shadow--2dp.mdl-cell.mdl-cell--4-col.mdl-cell--3-col-tablet.mdl-cell--12-col-desktop
     [:div.mdl-card__supporting-text.mdl-color-text--blue-grey-50
+     {:style {:padding padding}}
      [:h3 "View options"]
      [:ul
       (doall (for [opt (get-in @app-state [:options])]
@@ -143,21 +138,39 @@
                  [:span.mdl-checkbox__label opt]]]))]]
     [:div.mdl-card__actions.mdl-card--border
      [:a.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-color-text--blue-grey-50
-      {:href "#"}
+      {:href     "#"
+       :on-click change-location}
       "Change location"]
      [:div.mdl-layout-spacer]
-     [:i.material-icons "location_on"]]]])
+     [:i.material-icons "location_on"]]]
+   [:div.demo-separator.mdl-cell--1-col]
+   [:div.demo-updates.mdl-card.mdl-shadow--2dp.mdl-cell.mdl-cell--4-col.mdl-cell--4-col-tablet.mdl-cell--12-col-desktop
+    [:div.mdl-card__title.mdl-card--expand.mdl-color--teal-300
+     [:h2.mdl-card__title-text "Updates"]]
+    [:div.mdl-card__supporting-text.mdl-color-text--grey-600
+     "\n                Non dolore elit adipisicing ea reprehenderit consectetur culpa.\n              "]
+    [:div.mdl-card__actions.mdl-card--border
+     [:a.mdl-button.mdl-js-button.mdl-js-ripple-effect
+      {:href "#"}
+      "Read More"]]]])
 
 
 (defn content []
   [:main.mdl-layout__content.mdl-color--grey-100
    [:div.mdl-grid.demo-content
 
-    [pie-charts]
-    [line-charts]
     [cards]
+    [line-charts]
+    [pie-charts]
 
     ]])
+
+(defn mdl [& children]
+  (r/create-class
+    {:display-name         "mdl-wrapper"
+     :component-did-mount  (fn [] (upgrade-dom))
+     :component-did-update (fn [] (upgrade-dom))
+     :reagent-render       (fn [& children] (into [:div] children))}))
 
 (defn main []
   [mdl
@@ -175,3 +188,54 @@
 
 (defn reload []
   (render-main))
+
+;; Notes: requires cordova camera plugin
+(defn take-picture! []
+  (.getPicture js/navigator.camera
+               (fn success [uri] (println "Image uri:" uri))
+               (fn fail [msg] (println "Failure:" msg))
+               #js {:quality 50}))
+
+(comment
+  "Interactive examples to eval on your repl"
+  (swap! app-state assoc-in [:options 0] "Very very very very very very very very very looong text")
+  (swap! app-state update-in [:options] subvec 1)
+  (swap! app-state assoc-in [:menu 1 1] "face")
+  ;;
+  (reset! app-state bug-report)
+  (get-in @app-state [:options 0])
+  ;;
+  (take-picture!))
+
+(def bug-report
+  {:user    {:email "hello@example.com"}
+   :menu    [["Home" "home"]
+             ["Inbox" "inbox"]
+             ["Trash" "delete"]
+             ["Spam" "report"]
+             ["Forums" "forum"]
+             ["Updates" "flag"]
+             ["Promos" "local_offer"]
+             ["Purchases" "shopping_cart"]
+             ["Social" "people"]
+             ["Help" "help_outline"]]
+   :options [{:val "Click per object"}
+             "Views per object"
+             "Objects selected"
+             "Objects viewed"]
+   :charts  {:line [{:labels ["" "a" "b" "c"]
+                     :series [[1 2 3 4 5]
+                              [45 7 33 2 45]
+                              [6 78 4 2 11]]}
+                    {:labels ["" "a" "b" "c"]
+                     :series [[1 2 3 4 5]
+                              [45 7 33 2 45]
+                              [6 78 4 2 11]]}]
+             :pie  [{:labels [" " " " "90%"]
+                     :series [9 1 0]}
+                    {:labels [" " " " "70%"]
+                     :series [7 3 0]}
+                    {:labels [" " " " "60%"]
+                     :series [6 4 0]}
+                    {:labels [" " " " "40%"]
+                     :series [4 6 0]}]}})
